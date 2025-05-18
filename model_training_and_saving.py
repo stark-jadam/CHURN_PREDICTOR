@@ -229,7 +229,7 @@ if __name__ == '__main__':
         print("Customer IDs were not available or X_test indices were not stored; cannot list specific customers.")
 
     # --- 12. Save the Model, Scaler, Feature Columns, and Median Years ---
-    #    (Focusing on Random Forest as it was slightly better or as a starting point for deployment)
+    #    (Focusing on Random Forest as it was slightly than logical regression)
     print("\n\n--- Saving Model Artifacts ---")
 
     # Save the Random Forest Model
@@ -255,7 +255,7 @@ if __name__ == '__main__':
     else:
         print(
             "Warning: 'median_years_for_loyalty' was not calculated or available for saving. Streamlit app might need a default.")
-    
+
         if 'Years_as_Customer' in df_processed.columns:
             fallback_median_years = df_processed['Years_as_Customer'].median()
             print(
