@@ -116,24 +116,54 @@ This app uses a Random Forest model trained on historical customer data.
 """)
 
 # --- Dashboard Section ---
-st.subheader("Understanding Churn Drivers (Based on Training Data)")
-if df_for_plot is not None and not df_for_plot.empty:
-    # Ensure 'Target_Churn_Int' is used for plotting as defined in load_original_data
-    if 'Target_Churn_Int' in df_for_plot.columns and 'Last_Purchase_Days_Ago' in df_for_plot.columns:
-        fig_boxplot, ax_boxplot = plt.subplots(figsize=(7, 5))  # Adjusted figure size
-        sns.boxplot(x='Target_Churn_Int', y='Last_Purchase_Days_Ago', data=df_for_plot, ax=ax_boxplot, palette="pastel")
-        ax_boxplot.set_title('Context: Last Purchase Days Ago vs. Churn Status', fontsize=14)
-        ax_boxplot.set_xticklabels(['Did Not Churn (0)', 'Churned (1)'], fontsize=10)
-        ax_boxplot.set_xlabel("Customer Churn Status", fontsize=12)
-        ax_boxplot.set_ylabel("Last Purchase Days Ago", fontsize=12)
-        plt.tight_layout()
-        st.pyplot(fig_boxplot)
-        st.caption(
-            "This plot shows how the number of days since a customer's last purchase related to churn in the dataset used to train this model. A higher number of days since the last purchase often correlates with a higher likelihood of churn.")
-    else:
-        st.write("Required columns for contextual plot are missing from the loaded data.")
+st.header("Dashboard: Customer Insights (from Training Data)") # Changed to st.header for main title
+
+if df_for_plot is not None and not df_for_plot.empty and 'Target_Churn_Int' in df_for_plot.columns:
+    # Create two columns for the top dashboard plots
+    viz_col1, viz_col2 = st.columns(2)
+
+    with viz_col1:
+        st.subheader("Overall Churn Distribution")
+        # Ensure 'Target_Churn_Int' exists before trying to use it
+        if 'Target_Churn_Int' in df_for_plot:
+            churn_counts = df_for_plot['Target_Churn_Int'].value_counts().sort_index() # Ensure consistent order
+            labels = ['Did Not Churn (0)', 'Churned (1)']
+            # Ensure we have counts for both, default to 0 if a class is missing (unlikely for this data)
+            sizes = [churn_counts.get(0, 0), churn_counts.get(1, 0)]
+            colors = ['#66b3ff','#ff9999'] # Light blue, light red/pink
+            explode = (0, 0.05)  # explode the 2nd slice (Churned)
+
+            fig_pie, ax_pie = plt.subplots(figsize=(5,5)) # Make it square
+            ax_pie.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%',
+                       shadow=False, startangle=90, pctdistance=0.80)
+            # Draw a circle at the center to make it a donut
+            centre_circle = plt.Circle((0,0),0.60,fc='white')
+            fig_pie.gca().add_artist(centre_circle)
+            ax_pie.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+            plt.title("Overall Churn Rate", loc='center', fontsize=14) # Added title
+            st.pyplot(fig_pie)
+            st.caption("This donut chart shows the proportion of churned vs. non-churned customers in the original dataset.")
+        else:
+            st.write("Target_Churn_Int column missing for pie chart.")
+
+    with viz_col2:
+        st.subheader("Recency vs. Churn")
+        # This is your existing box plot code, now inside viz_col2
+        if 'Target_Churn_Int' in df_for_plot.columns and 'Last_Purchase_Days_Ago' in df_for_plot.columns:
+            fig_boxplot, ax_boxplot = plt.subplots(figsize=(7, 5.7))  # Adjusted figure size
+            sns.boxplot(x='Target_Churn_Int', y='Last_Purchase_Days_Ago', data=df_for_plot, ax=ax_boxplot, palette="pastel")
+            ax_boxplot.set_title('Last Purchase Days Ago vs. Churn Status', fontsize=14)
+            ax_boxplot.set_xticklabels(['Did Not Churn (0)', 'Churned (1)'], fontsize=10)
+            ax_boxplot.set_xlabel("Customer Churn Status", fontsize=12)
+            ax_boxplot.set_ylabel("Last Purchase Days Ago", fontsize=12)
+            plt.tight_layout()
+            st.pyplot(fig_boxplot)
+            st.caption(
+                "This plot shows how the number of days since a customer's last purchase related to churn in the dataset used to train this model.")
+        else:
+            st.write("Required columns for contextual box plot are missing from the loaded data.")
 else:
-    st.write("Contextual visualization data could not be loaded or is empty.")
+    st.write("Contextual visualization data could not be loaded or required columns are missing.")
 
 st.markdown("---")  # Separator
 
