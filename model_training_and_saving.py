@@ -262,4 +262,3 @@ if __name__ == '__main__':
                 f"Calculated fallback median years from df_processed: {fallback_median_years}. Consider saving this if needed.")
 
     print("\n\n--- End of Script: model_training_and_saving.py ---")
-    print("Next steps: Hyperparameter Tuning for Random Forest/Gradient Boosting, then build Streamlit app.")

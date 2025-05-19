@@ -36,11 +36,11 @@ def preprocess_input(data_dict, original_feature_columns, median_years):
     input_df = input_df.drop(['Gender', 'Promotion_Response'], axis=1)
 
     # --- 2. Convert Boolean to Int (already done by Streamlit for checkbox if used like that) ---
-    # Assuming Email_Opt_In comes as True/False from st.checkbox, convert to 1/0
+    # Convert Email_Opt_In from True/False to 1/0
     if 'Email_Opt_In' in input_df.columns:  # Make sure it exists
         input_df['Email_Opt_In'] = input_df['Email_Opt_In'].astype(int)
 
-    # --- 3. Feature Engineering (must match training phase) ---
+    # --- 3. Feature Engineering ---
     input_df['Spend_per_Purchase'] = np.where(
         input_df['Num_of_Purchases'] > 0,
         input_df['Total_Spend'] / input_df['Num_of_Purchases'], 0
@@ -179,8 +179,8 @@ else:
 
 st.sidebar.header("About")
 st.sidebar.info("""
-This is a demo web application for 'The Cypher on Elm' customer churn prediction project.
+This is a demo web application for 'The Cypher on Elm' (an online retailer) customer churn prediction project.
 It uses a machine learning model to predict whether a customer is likely to churn based on their entered characteristics.
 """)
 st.sidebar.markdown("---")
-st.sidebar.markdown("Developed as part of a data science project.")
+st.sidebar.markdown("Developed as part of Adam Stark's WGU Capstone Project.")
