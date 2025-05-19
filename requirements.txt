@@ -3,3 +3,5 @@ numpy
 scikit-learn
 streamlit
 joblib
+matplotlib
+seaborn
