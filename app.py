@@ -141,6 +141,7 @@ st.subheader("Enter Customer Details for Churn Prediction:")
 # --- Input Fields ---
 col1, col2, col3 = st.columns(3)
 
+
 with col1:
     st.markdown("##### Demographics & Account")
     age = st.number_input("Age", min_value=18, max_value=100, value=30, step=1)
