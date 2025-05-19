@@ -125,26 +125,41 @@ if df_for_plot is not None and not df_for_plot.empty and 'Target_Churn_Int' in d
     with viz_col1:
         st.subheader("Overall Churn Distribution")
         # Ensure 'Target_Churn_Int' exists before trying to use it
-        if 'Target_Churn_Int' in df_for_plot:
-            churn_counts = df_for_plot['Target_Churn_Int'].value_counts().sort_index() # Ensure consistent order
-            labels = ['Did Not Churn (0)', 'Churned (1)']
-            # Ensure we have counts for both, default to 0 if a class is missing (unlikely for this data)
-            sizes = [churn_counts.get(0, 0), churn_counts.get(1, 0)]
-            colors = ['#66b3ff','#ff9999'] # Light blue, light red/pink
-            explode = (0, 0.05)  # explode the 2nd slice (Churned)
+        if 'Target_Churn_Int' in df_for_plot and not df_for_plot['Target_Churn_Int'].empty:
+            churn_counts = df_for_plot[
+                'Target_Churn_Int'].value_counts().sort_index()  # Ensures 0 is first, 1 is second
 
-            fig_pie, ax_pie = plt.subplots(figsize=(5,5)) # Make it square
-            ax_pie.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%',
-                       shadow=False, startangle=90, pctdistance=0.80)
-            # Draw a circle at the center to make it a donut
-            centre_circle = plt.Circle((0,0),0.60,fc='white')
-            fig_pie.gca().add_artist(centre_circle)
-            ax_pie.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-            plt.title("Overall Churn Rate", loc='center', fontsize=14) # Added title
-            st.pyplot(fig_pie)
-            st.caption("This donut chart shows the proportion of churned vs. non-churned customers in the original dataset.")
+            # Get the counts for each category, defaulting to 0 if a category isn't present
+            count_did_not_churn = churn_counts.get(0, 0)
+            count_churned = churn_counts.get(1, 0)
+
+            # Create dynamic labels with counts
+            labels = [
+                f'Did Not Churn ({count_did_not_churn})',
+                f'Churned ({count_churned})'
+            ]
+
+            sizes = [count_did_not_churn, count_churned]
+            colors = ['#66b3ff', '#ff9999']  # Light blue, light red/pink
+            explode = (0, 0.05)  # explode the 'Churned' slice
+
+            # Only plot if there's data to plot
+            if sum(sizes) > 0:
+                fig_pie, ax_pie = plt.subplots(figsize=(5, 5))  # Make it square
+                ax_pie.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%',
+                           shadow=False, startangle=90, pctdistance=0.80, textprops={'fontsize': 9})  # Added textprops
+                # Draw a circle at the center to make it a donut
+                centre_circle = plt.Circle((0, 0), 0.60, fc='white')
+                fig_pie.gca().add_artist(centre_circle)
+                ax_pie.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+                plt.title("Overall Churn Rate", loc='center', fontsize=14)
+                st.pyplot(fig_pie)
+                st.caption(
+                    "This donut chart shows the proportion and count of churned vs. non-churned customers in the original dataset.")
+            else:
+                st.write("No data available to display the churn distribution chart.")
         else:
-            st.write("Target_Churn_Int column missing for pie chart.")
+            st.write("Target_Churn_Int column missing or empty for pie chart.")
 
     with viz_col2:
         st.subheader("Recency vs. Churn")
