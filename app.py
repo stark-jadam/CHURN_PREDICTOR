@@ -19,7 +19,6 @@ except Exception as e:
     st.error(f"An error occurred loading files: {e}")
     st.stop()
 
-
 # --- Load original data for a contextual plot ---
 @st.cache_data  # Cache the data loading to improve performance
 def load_original_data():
