@@ -36,7 +36,7 @@ def load_original_data():
         else:  # Assuming it's already int or needs no change
             df_viz['Target_Churn_Int'] = df_viz['Target_Churn']
 
-        return df_viz[['Last_Purchase_Days_Ago', 'Target_Churn_Int']]  # Select only needed columns
+        return df_viz # Return the whole df for more flexible plotting
     except FileNotFoundError:
         st.sidebar.error("Original dataset ('online_retail_customer_churn.csv') for visualization not found.")
         return None
@@ -79,7 +79,7 @@ def preprocess_input(data_dict, original_feature_columns, median_years):
         input_df['Purchases_per_Year'] = np.where(
             input_df['Years_as_Customer'].iloc[0] > 0,  # Use .iloc[0] for Series access
             input_df['Num_of_Purchases'].iloc[0] / input_df['Years_as_Customer'].iloc[0],
-            input_df['Num_of_Purchases'].iloc[0]  # Or 0, depending on logic for 0 years
+            input_df['Num_of_Purchases'].iloc[0]
         )
     else:
         input_df['Purchases_per_Year'] = 0  # Default if Years_as_Customer is not in input
@@ -93,12 +93,8 @@ def preprocess_input(data_dict, original_feature_columns, median_years):
         input_df['Loyal_High_Sat'] = 0  # Default if keys are missing
 
     # --- 4. Ensure all feature columns are present and in correct order ---
-    # Create a DataFrame row with all expected columns, initialized to a default (e.g., 0)
-    # This ensures that if a feature isn't directly created from input_data (like some OHE columns),
-    # it still exists.
     output_df_row = pd.DataFrame(0, index=[0], columns=original_feature_columns)
 
-    # Populate with values from input_df, matching by column name
     for col in input_df.columns:
         if col in output_df_row.columns:
             output_df_row[col] = input_df[col].iloc[0]
@@ -116,21 +112,55 @@ This app uses a Random Forest model trained on historical customer data.
 
 # --- Dashboard Section ---
 st.subheader("Understanding Churn Drivers (Based on Training Data)")
+
 if df_for_plot is not None and not df_for_plot.empty:
-    # Ensure 'Target_Churn_Int' is used for plotting as defined in load_original_data
-    if 'Target_Churn_Int' in df_for_plot.columns and 'Last_Purchase_Days_Ago' in df_for_plot.columns:
-        fig_boxplot, ax_boxplot = plt.subplots(figsize=(7, 5))  # Adjusted figure size
-        sns.boxplot(x='Target_Churn_Int', y='Last_Purchase_Days_Ago', data=df_for_plot, ax=ax_boxplot, palette="pastel")
-        ax_boxplot.set_title('Context: Last Purchase Days Ago vs. Churn Status', fontsize=14)
-        ax_boxplot.set_xticklabels(['Did Not Churn (0)', 'Churned (1)'], fontsize=10)
-        ax_boxplot.set_xlabel("Customer Churn Status", fontsize=12)
-        ax_boxplot.set_ylabel("Last Purchase Days Ago", fontsize=12)
-        plt.tight_layout()
-        st.pyplot(fig_boxplot)
-        st.caption(
-            "This plot shows how the number of days since a customer's last purchase related to churn in the dataset used to train this model. A higher number of days since the last purchase often correlates with a higher likelihood of churn.")
+    if 'Target_Churn_Int' in df_for_plot.columns:
+        # Create two columns for the dashboard plots
+        dash_col1, dash_col2 = st.columns(2)
+
+        with dash_col1:
+            # --- Donut Chart for Overall Churn Rate ---
+            churn_counts = df_for_plot['Target_Churn_Int'].value_counts()
+            if not churn_counts.empty:
+                labels = ['Did Not Churn (0)', 'Churned (1)']
+                sizes = [churn_counts.get(0, 0), churn_counts.get(1, 0)] # Handle cases where one category might be missing
+                colors = ['#5cb85c', '#d9534f'] # Green for no churn, Red for churn
+                explode = (0.05, 0)  # explode the 1st slice (Not Churned)
+
+                fig_donut, ax_donut = plt.subplots(figsize=(6, 5)) # Adjusted figure size
+                ax_donut.pie(sizes, explode=explode, labels=labels, colors=colors,
+                             autopct='%1.1f%%', shadow=False, startangle=90,
+                             pctdistance=0.85) # pctdistance for donut hole
+
+                # Draw a circle at the center to make it a donut
+                centre_circle = plt.Circle((0, 0), 0.70, fc='white')
+                fig_donut.gca().add_artist(centre_circle)
+
+                ax_donut.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+                ax_donut.set_title('Overall Churn Distribution in Training Data', fontsize=14)
+                plt.tight_layout()
+                st.pyplot(fig_donut)
+                st.caption("This donut chart shows the proportion of customers who churned versus those who did not in the training dataset.")
+            else:
+                st.write("Not enough data to display churn distribution donut chart.")
+
+        with dash_col2:
+            # --- Box Plot for Last Purchase Days Ago ---
+            if 'Last_Purchase_Days_Ago' in df_for_plot.columns:
+                fig_boxplot, ax_boxplot = plt.subplots(figsize=(6, 5))  # Adjusted figure size
+                sns.boxplot(x='Target_Churn_Int', y='Last_Purchase_Days_Ago', data=df_for_plot, ax=ax_boxplot, palette="pastel")
+                ax_boxplot.set_title('Context: Last Purchase Days Ago vs. Churn', fontsize=14)
+                ax_boxplot.set_xticklabels(['Did Not Churn (0)', 'Churned (1)'], fontsize=10)
+                ax_boxplot.set_xlabel("Customer Churn Status", fontsize=12)
+                ax_boxplot.set_ylabel("Last Purchase Days Ago", fontsize=12)
+                plt.tight_layout()
+                st.pyplot(fig_boxplot)
+                st.caption(
+                    "This plot shows how the days since a customer's last purchase related to churn in the training data. Higher days often correlate with higher churn likelihood.")
+            else:
+                st.write("Required 'Last_Purchase_Days_Ago' column for boxplot is missing.")
     else:
-        st.write("Required columns for contextual plot are missing from the loaded data.")
+        st.write("Required 'Target_Churn_Int' column for dashboard plots is missing from the loaded data.")
 else:
     st.write("Contextual visualization data could not be loaded or is empty.")
 
