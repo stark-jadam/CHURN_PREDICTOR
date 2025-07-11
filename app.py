@@ -263,5 +263,3 @@ st.sidebar.info("""
 This is a demo web application for 'The Cypher on Elm' (an online retailer) customer churn prediction project.
 It uses a machine learning model to predict whether a customer is likely to churn based on their entered characteristics.
 """)
-st.sidebar.markdown("---")
-st.sidebar.markdown("Developed as part of Adam Stark's WGU Capstone Project, 2025.")
